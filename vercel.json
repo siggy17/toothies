@@ -11,17 +11,6 @@
         "src": "/(.*)",
         "dest": "/app.py"
       }
-    ],
-    "ignore": [
-      "__pycache__",
-      "*.pyc",
-      "*.pyo",
-      "env",
-      "venv",
-      ".idea",
-      ".vscode",
-      "results",
-      ".DS_Store"
     ]
   }
   
