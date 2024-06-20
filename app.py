@@ -1,17 +1,20 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, pipeline
+import requests
+import os
 
 app = FastAPI()
 
-model_name = "LyraLongPaw7/toothies"  # Replace with your model's Hugging Face path
-tokenizer = GPT2Tokenizer.from_pretrained(model_name)
-model = GPT2LMHeadModel.from_pretrained(model_name)
-text_generator = pipeline('text-generation', model=model, tokenizer=tokenizer)
+API_URL = "https://api-inference.huggingface.co/models/your-username/your-model"
+headers = {"Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_TOKEN')}"}
 
 class ChatRequest(BaseModel):
     user_input: str
+
+def query(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
 
 @app.get("/", response_class=HTMLResponse)
 async def get():
@@ -79,7 +82,7 @@ async def get():
                 const data = await response.json();
                 const chatBox = document.getElementById("chat-box");
                 chatBox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
-                chatBox.innerHTML += `<p><strong>GPT-2:</strong> ${data.response}</p>`;
+                chatBox.innerHTML += `<p><strong>GPT-2:</strong> ${data.response[0]['generated_text']}</p>`;
                 document.getElementById("user-input").value = "";
             }
         </script>
@@ -90,5 +93,5 @@ async def get():
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    response = text_generator(request.user_input, max_length=50, truncation=True)
-    return {"response": response[0]['generated_text']}
+    data = query({"inputs": request.user_input})
+    return {"response": data}
